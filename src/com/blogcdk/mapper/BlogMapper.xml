@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blogcdk.dao.BlogMapper">
+    <!-- 用来删除1天以前的博客访问记录 -->
+    <delete id="delAccessBlogByTime" parameterType="java.sql.Date">
+	    delete from access_blog where DATEDIFF(#{accessDate},access_time)>=1
+	</delete>
+	
+    <!-- 查找  -->
+	<select id="selectAccessBlogIdOrIp" resultType="com.blogcdk.model.AccessBlog">
+	    select * from access_blog where (ip = #{ip} or user_id = #{userId}) and  blog_id=#{blogId}
+	</select>
+	
+	<!--  -->
+	<insert id="insertAccessBlog" parameterType="com.blogcdk.model.AccessBlog">
+	    insert into access_blog(blog_id,ip,user_id,access_time) values(#{blogId},#{ip},#{userId},#{accessTime})
+	</insert>
+    
+	<!-- 查找推荐文章 recommend=1推荐 recommend=0不推荐  -->
+	<select id="selectRecommendBlogs" resultType="com.blogcdk.model.Blog">
+	    select * from blog where recommend = #{recommend} limit 0,#{recommendNum} 
+	</select>
+	
+	<!-- 查找相关分类文章，分页显示  0-科技博客  1-倾听世界    2-每日一笑   3-叫醒耳朵 -->
+	<select id="selectPageCategoryBlogs"  resultType="com.blogcdk.model.BlogDetail">
+	    select * from blog,userinfo where from_user_id = user_id and category_id = #{categoryId}    
+            <if test="pageUtil.start!=null and pageUtil.count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+	
+	<!-- 计算每一类型的文章的总数  -->
+	<select id="calBlogCountByCategory" parameterType="int" resultType="int">
+	    select count(*) from blog where category_id = #{categoryId}  
+	</select>
+	
+	<!-- 根据标题或者内容关键词查找相关文章，分页显示 -->
+	<select id="selectPageBlogsByKeywords"  resultType="com.blogcdk.model.Blog">
+	    select * from blog where blog_title like CONCAT('%',#{keywords,jdbcType=VARCHAR},'%') or article like CONCAT('%',#{keywords,jdbcType=VARCHAR},'%')   
+            <if test="start!=null and count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+	
+	<!-- 计算出搜索结果的总数 -->
+	<select id="calBlogCountByKeywords" parameterType="String" resultType="int">
+	    select count(*) from blog where blog_title like CONCAT('%',#{keywords,jdbcType=VARCHAR},'%') or article like CONCAT('%',#{keywords,jdbcType=VARCHAR},'%')  
+	</select>
+	
+	<!-- 根据阅读量取阅读量较高的num篇文章 -->
+	<select id="selectBlogsByReadNum" resultType="com.blogcdk.model.Blog">
+	    select * from blog where category_id=#{categoryId} order by read_num desc limit 0,#{num} 
+	</select>
+	
+	<!-- 根据发表时间取最近的几篇文章 -->
+	<select id="selectBlogsByTime" resultType="com.blogcdk.model.Blog">
+	    select * from blog where category_id=#{categoryId} order by time desc limit 0,#{num} 
+	</select>
+	
+	
+	<!-- 根据发表时间取最近的几篇文章（包括文章的作者信息） -->
+	<select id="selectBlogDetailByTime" resultType="com.blogcdk.model.BlogDetail">
+	    select blog.*,user_nickname,user_head_img,user_about,user_points 
+from blog,userinfo where category_id=#{categoryId} and blog.from_user_id=userinfo.user_id order by time desc LIMIT 0,#{num}
+	</select>
+	
+	<!-- 根据id查询 -->
+	<select id="findById" parameterType="int" resultType="com.blogcdk.model.BlogDetail" >
+	    select blog.*,user_nickname,user_head_img,user_about,user_points from blog,userinfo where blog_id=#{blogId} and blog.from_user_id=userinfo.user_id
+	</select>
+	
+	<!-- 根据作者id计算作者撰写的博客总数-->
+	<select id="calBlogCountByUser" parameterType="int" resultType="int">
+	    select count(*) from blog where from_user_id=#{userId} 
+	</select>
+	
+	<!-- 更新文章阅读数量 -->
+	<update id="updateBlogReadNum" >
+	    update blog set read_num=#{readNum} where blog_id=#{blogId}
+	</update>
+	
+	<!-- 新增博客 -->
+	<insert id="writeBlog" parameterType="com.blogcdk.model.Blog">
+	    insert into blog(blog_title,blog_desc,article,time,from_user_id,category_id,read_num,cover_image,recommend) values(#{blogTitle},#{blogDesc},#{article},#{time},#{fromUserId},#{categoryId},#{readNum},#{coverImage},#{recommend})
+	</insert>
+	
+	<!-- 根据用户id分页获取其所有博客 -->
+	<select id="selectPageBlogsByUserId"  resultType="com.blogcdk.model.Blog" >
+	    select * from blog where from_user_id=#{userId}
+            <if test="pageUtil.start!=null and pageUtil.count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+	
+	<!-- 计算文章总数  -->
+	<select id="calBlogsNum"  resultType="int">
+	    select count(*) from blog
+	</select>
+	
+	<!-- 分页查找全部文章详细信息 -->
+	<select id="selectAllBlogDetail"  resultType="com.blogcdk.model.BlogDetail" >
+	    select blog.*,user_nickname,user_head_img,user_about,user_points from blog,userinfo where blog.from_user_id=userinfo.user_id 
+            <if test="pageUtil.start!=null and pageUtil.count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+	
+	<!-- <select id="selectPermissionByUsername" parameterType="String" resultType="String">
+	    select p.permission_name from user u,role r,permission p where u.role_id=r.role_id and p.role_id=r.role_id and u.username=#{username}
+	</select>
+	<select id="selectUserByUsernameOfReg" parameterType="String" resultType="com.blogcdk.model.User">
+	    select * from user where username=#{username}
+	</select>
+	<insert id="insertUser" parameterType="com.blogcdk.model.User">
+	    insert into user(username,password,email,gravatar_img,state,code) values(#{username},#{password},#{email},#{gravatarImg},#{state},#{code})
+	</insert>
+	<select id="findUserByNameAndPwd" parameterType="map" resultType="com.blogcdk.model.User">
+	    select * from user where username=#{username} and password=#{password}
+	</select>
+	<select id="findById" parameterType="int" resultType="com.blogcdk.model.User" >
+	    select * from user where user_id=#{userId}
+	</select>
+	<select id="findByCode" parameterType="String" resultType="com.blogcdk.model.User">
+	    select * from user where code=#{code}
+	</select>
+	<update id="updateUser" parameterType="com.blogcdk.model.User">
+	    update user set username=#{username},password=#{password},email=#{email},gravatar_img=#{gravatarImg},state=#{state},code=#{code} where user_id=#{userId}
+	</update>
+	<delete id="delete" parameterType="int">
+	    delete fromm user where user_id=#{userId}
+	</delete>
+	<select id="findAllUsers" resultType="com.blogcdk.model.User">
+	    select * from user
+	</select> -->
+</mapper>

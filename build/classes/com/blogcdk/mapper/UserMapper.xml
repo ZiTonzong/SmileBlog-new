@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blogcdk.dao.UserMapper">
+  <!-- 
+	//添加用户
+	public void addUser(User user);
+	//用户名和密码查询用户
+	public User findUserByNameAndPwd(@Param("username") String username,
+				@Param("password") String password);
+	//更新用户
+    boolean update(User user); 
+    //删除用户
+    boolean delete(int id);    
+    //根据id查询
+    User findById(int id);  
+    //根据code查询user
+    User findByCode(String code);
+    //查询所有用户
+    List<User> findAll();  
+    //根据用户名查找用户
+    User selectUserByUsername(String userName);
+    List<User> selectUserByUsernameOfReg(String userName);
+    //根据用户名查找角色
+    Set<String> selectRolesByUserName(String userName);
+    //根据用户名查找权限
+    Set<String> selectPermissionByUserName(String userName);
+	 -->
+	<!-- shiro权限专用 -->
+	<!-- 
+	<resultMap type="com.blogcdk.model.User" id="UserResultMap">
+	    <id column="user_id" property="user_id" jdbcType="INTEGER"/>
+	    <result column="username" property="username" jdbcType="VARCHAR"/>
+	    <result column="password" property="password" jdbcType="VARCHAR"/>
+	</resultMap> -->
+	<select id="selectUserByUsername" parameterType="String"  resultType="com.blogcdk.model.User">
+	    select * from user where username = #{username}
+	</select>
+	<select id="selectRolesByUsername" parameterType="String" resultType="String">
+	    select r.role_name from user u,role r where u.role_id=r.user_id and u.username=#{username}
+	</select>
+	<select id="selectPermissionByUsername" parameterType="String" resultType="String">
+	    select p.permission_name from user u,role r,permission p where u.role_id=r.role_id and p.role_id=r.role_id and u.username=#{username}
+	</select>
+	<select id="selectUserByUsernameOfReg" parameterType="String" resultType="com.blogcdk.model.User">
+	    select * from user where username=#{username}
+	</select>
+	<insert id="insertUser" parameterType="com.blogcdk.model.User">
+	    insert into user(username,password,email,gravatar_img,state,code) values(#{username},#{password},#{email},#{gravatarImg},#{state},#{code})
+	</insert>
+	<select id="findUserByNameAndPwd" parameterType="map" resultType="com.blogcdk.model.User">
+	    select * from user where username=#{username} and password=#{password}
+	</select>
+	<select id="findById" parameterType="int" resultType="com.blogcdk.model.User" >
+	    select * from user where user_id=#{userId}
+	</select>
+	<select id="findByCode" parameterType="String" resultType="com.blogcdk.model.User">
+	    select * from user where code=#{code}
+	</select>
+	<update id="updateUser" parameterType="com.blogcdk.model.User">
+	    update user set username=#{username},password=#{password},email=#{email},gravatar_img=#{gravatarImg},state=#{state},code=#{code} where user_id=#{userId}
+	</update>
+	<delete id="delete" parameterType="int">
+	    delete fromm user where user_id=#{userId}
+	</delete>
+	<select id="findAllUsers" resultType="com.blogcdk.model.User">
+	    select * from user
+	</select>
+	
+	<!-- 更新用户积分 -->
+	<update id="updateUserInfoPonits" >
+	    update userinfo set user_points=#{userPoints} where user_id=#{userId}
+	</update>
+	
+	<!-- 根据管理员登录名查找管理员 -->
+	<select id="selectAdminByAdminName" parameterType="String"  resultType="com.blogcdk.model.User">
+	    select * from user where username = #{adminName} and role_id=1
+	</select>
+	
+	<!-- 计算用户总数  -->
+	<select id="calAllUserAndAdminNum"  resultType="int">
+	    select count(*) from user
+	</select>
+	
+	
+	
+	
+	<!-- 操作userinfo表      start -->
+	<!-- 根据用户id查询用户具体资料 -->
+	<select id="findUserinfoById" parameterType="int" resultType="com.blogcdk.model.Userinfo">
+	    select * from userinfo where user_id=#{userId}
+	</select>
+	
+	<!-- 添加用户个人资料 -->
+	<insert id="insertUserinfo" parameterType="com.blogcdk.model.Userinfo">
+	    insert into userinfo(user_id,user_nickname,user_age,user_email,user_url,user_about,user_head_img,user_points) values(#{userId},#{userNickname},#{userAge},#{userEmail},#{userUrl},#{userAbout},#{userHeadImg},#{userPoints})
+	</insert>
+	
+	<!-- 更新用户信息 -->
+	<update id="updateUserInfo" parameterType="com.blogcdk.model.Userinfo">
+	    update userinfo set user_nickname=#{userNickname},user_age=#{userAge},user_email=#{userEmail},user_url=#{userUrl},user_about=#{userAbout},user_head_img=#{userHeadImg}, user_points=#{userPoints} where user_id=#{userId}
+	</update>
+	
+	<!-- 查找所有用户具体信息 -->
+	<select id="findAllUserinfo" resultType="com.blogcdk.model.Userinfo">
+	    select * from userinfo
+	</select>
+	<!-- 操作userinfo表     end -->
+	
+	<!-- 分页查找全部用户 -->
+	<select id="selectPageAllUser"  resultType="com.blogcdk.model.User" >
+	    select * from user 
+            <if test="pageUtil.start!=null and pageUtil.count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blogcdk.dao.RemarkMapper">
+    <!-- 根据博客id计算该博客下共有多少条评论（不包括作者自己的评论和回复评论的内容）-->
+	<select id="calRemarkCountByBlogId"  resultType="int">
+	    select count(*) from remark where blog_id=#{blogId} and from_user_id!=#{userId}
+	</select>
+	
+	<!-- 根据博客id计算该博客下所有评论数 -->
+	<select id="calAllRemarkCountByBlogId" parameterType="int" resultType="int">
+	    select count(*) from remark where blog_id=#{blogId} 
+	</select>
+	
+	<!-- 根据博客id计算该博客下所有评论回复数 -->
+	<select id="calReplyCountByBlogId" parameterType="int" resultType="int">
+	    select count(*) from reply where blog_id=#{blogId} 
+	</select>
+	
+	<!-- 根据博客id查找这篇博客下的所有评论-->
+	<select id="selectRemarkByBlogId" parameterType="int" resultType="com.blogcdk.model.Remark">
+	    select * from remark where blog_id=#{blogId} 
+	</select>
+	
+	<!-- 根据博客id查找这篇博客下的所有评论,分页显示 -->
+	<select id="selectPageRemarkByBlogId" resultType="com.blogcdk.model.Remark">
+	    select * from remark where blog_id = #{blogId}    
+            <if test="pageUtil.start!=null and pageUtil.count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+	
+	<!-- 根据评论id获取该条评论下的所有回复-->
+	<select id="selectReplyByRemarkId" parameterType="int" resultType="com.blogcdk.model.Reply">
+	    select * from reply where remark_id=#{remarkId} 
+	</select>
+	
+	<!-- 添加评论到remark表中 -->
+	<insert id="insertRemark" parameterType="com.blogcdk.model.Remark">
+	    insert into remark(blog_id,content,time,from_user_id) values(#{blogId},#{content},#{time},#{fromUserId})
+	</insert>
+	
+	<!-- 添加评论到reply表中 -->
+	<insert id="insertReply" parameterType="com.blogcdk.model.Reply">
+	    insert into reply(blog_id,remark_id,content,time,from_user_id,to_user_id) values(#{blogId},#{remarkId},#{content},#{time},#{fromUserId},#{toUserId})
+	</insert>
+	
+	<!-- 获取所有评论（不包含回复）-->
+	<select id="selectAllRemarks"  resultType="com.blogcdk.model.Remark">
+	    select * from remark 
+	</select>
+	
+	<!-- 分页获取所有评论（不包含回复） -->
+	<select id="selectPageRemarks" resultType="com.blogcdk.model.Remark">
+	    select * from remark     
+            <if test="pageUtil.start!=null and pageUtil.count!=null">
+                    limit #{pageUtil.start},#{pageUtil.count}
+            </if>
+	</select>
+</mapper>
